@@ -68,14 +68,13 @@ class MyLayerRelu(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
-        # print(y, " kumar ")
-        z= Lambda(lambda inputs: inputs[0]/K.sqrt(inputs[1]) if inputs[1]!=0 else 1000000)([x[:,:,:,0:y],x[:,:,:,y:2*y]])
+        z= x[:,:,:,0:y]/x[:,:,:,y:2*y]
         tfd = tfp.distributions
         dist = tfd.Normal(loc=0., scale=1.)
         var1 = dist.cdf(z)
         var2 = dist.prob(z)
         mean = x[:,:,:,0:y]*var1 + K.sqrt(x[:,:,:,y:2*y])*var2
-        var3 = (x[:,:,:,0:y]+x[:,:,:,y:2*y])*var1
+        var3 = (x[:,:,:,0:y]*x[:,:,:,0:y]+x[:,:,:,y:2*y])*var1
         var4 = x[:,:,:,0:y]*K.sqrt(x[:,:,:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
         return K.concatenate([mean,variance])
@@ -95,13 +94,14 @@ class MyLayerDenseRelu(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
-        z= Lambda(lambda inputs: inputs[0]/K.sqrt(inputs[1]) if inputs[1]!=0 else 1000000)([x[:,0:y],x[:,y:2*y]])
+        # z= Lambda(lambda inputs: inputs[0]/K.sqrt(inputs[1]) if inputs[1]!=0 else 1000000)([x[:,0:y],x[:,y:2*y]])
+        z= x[:,0:y]/x[:,y:2*y]
         tfd = tfp.distributions
         dist = tfd.Normal(loc=0., scale=1.)
         var1 = dist.cdf(z)
         var2 = dist.prob(z)
         mean = x[:,0:y]*var1 + K.sqrt(x[:,y:2*y])*var2
-        var3 = (x[:,0:y]+x[:,y:2*y])*var1 
+        var3 = (K.square(x[:,0:y])+x[:,y:2*y])*var1 
         var4 = x[:,0:y]*K.sqrt(x[:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
         return K.concatenate([mean,variance])
@@ -229,14 +229,14 @@ class MyLayerMaxPool(_Pooling2D):
             v1=a1[:,:,:,h1:h2]
             v2=a2[:,:,:,h1:h2]
             di=m1-m2
-            sum_sq=K.sqrt(v1*v1+v2*v2)
+            sum_sq=K.sqrt(v1+v2)
             alpha=di/sum_sq
             tfd = tfp.distributions
             dist = tfd.Normal(loc=0., scale=1.)
             var1 = dist.cdf(alpha)
             var2 = dist.prob(alpha)
             mean1=sum_sq*var2+di*var1+m2
-            variance1=(m1+m2)*sum_sq*var2+(m1*m1+v1*v1)*var1+(m2*m2+v2*v2)*(1-var1)-mean1*mean1
+            variance1=(m1+m2)*sum_sq*var2+(m1*m1+v1)*var1+(m2*m2+v2)*(1-var1)-mean1*mean1
             return K.concatenate([mean1,variance1])
         return get_mean(get_mean(x1,x3),get_mean(x2,x4))
 
