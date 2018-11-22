@@ -15,7 +15,7 @@ from keras.optimizers import SGD
 import keras.backend as K
 import numpy as np
 import keras
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import tensorflow as tf
 
 
@@ -54,7 +54,6 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 model = Sequential()
 
 
-model.add(MyLayer(filter_shape=3,num_layers=5))
 model.add(Conv2D(32, kernel_size=(3, 3),
                  activation='relu',
                  input_shape=(28,28,1)))

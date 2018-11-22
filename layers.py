@@ -16,7 +16,6 @@ class MyLayer(Layer):
     def build(self, input_shape):
         # Create a trainable weight variable for this layer.
         y= int(input_shape[3]/2)
-        # print(y)
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(self.filter_shape,
                                         self.filter_shape, y,self.num_layers),
@@ -68,14 +67,13 @@ class MyLayerRelu(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
-        # print(y, " kumar ")
-        z= Lambda(lambda inputs: inputs[0]/K.sqrt(inputs[1]) if inputs[1]!=0 else 1000000)([x[:,:,:,0:y],x[:,:,:,y:2*y]])
+        z=x[:,:,:,0:y]/K.sqrt(x[:,:,:,y:2*y])
         tfd = tfp.distributions
         dist = tfd.Normal(loc=0., scale=1.)
         var1 = dist.cdf(z)
         var2 = dist.prob(z)
         mean = x[:,:,:,0:y]*var1 + K.sqrt(x[:,:,:,y:2*y])*var2
-        var3 = (x[:,:,:,0:y]+x[:,:,:,y:2*y])*var1
+        var3 = (K.square(x[:,:,:,0:y])+x[:,:,:,y:2*y])*var1
         var4 = x[:,:,:,0:y]*K.sqrt(x[:,:,:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
         return K.concatenate([mean,variance])
@@ -95,13 +93,13 @@ class MyLayerDenseRelu(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
-        z= Lambda(lambda inputs: inputs[0]/K.sqrt(inputs[1]) if inputs[1]!=0 else 1000000)([x[:,0:y],x[:,y:2*y]])
+        z=x[:,0:y]/K.sqrt(x[:,y:2*y])
         tfd = tfp.distributions
         dist = tfd.Normal(loc=0., scale=1.)
         var1 = dist.cdf(z)
         var2 = dist.prob(z)
         mean = x[:,0:y]*var1 + K.sqrt(x[:,y:2*y])*var2
-        var3 = (x[:,0:y]+x[:,y:2*y])*var1 
+        var3 = (K.square(x[:,0:y])+x[:,y:2*y])*var1 
         var4 = x[:,0:y]*K.sqrt(x[:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
         return K.concatenate([mean,variance])

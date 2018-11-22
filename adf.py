@@ -31,8 +31,8 @@ def customloss(y_true, y_pred):
 	output = var/scale
 	y_true = K.clip(y_true, K.epsilon(), 1)
 	opt1 = K.sum((output-1)*K.log(y_true),axis=-1)
-	opt2 = K.sum(K.exp(tf.lgamma(output)),axis=-1)
-	opt3 = K.exp(tf.lgamma(K.sum(output,axis=-1)))
+	opt2 = K.sum(tf.lgamma(output),axis=-1)
+	opt3 = tf.lgamma(K.sum(output,axis=-1))
 	return opt2-opt1-opt3
 
 
@@ -60,10 +60,10 @@ epochs=1
 # (x_train, y_train), (x_test, y_test) = mnist.load_data()
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-x_train = x_train[0:1,:,:]
-y_train = y_train[0:1]
-x_test = x_test[0:1,:,:]
-y_test = y_test[0:1]
+x_train = x_train[0:1000,:,:]
+y_train = y_train[0:1000]
+x_test = x_test[0:1000,:,:]
+y_test = y_test[0:1000]
 
 # for i in range(9):
 #   plt.subplot(3,3,i+1)
@@ -106,11 +106,11 @@ model.add(MyLayer(filter_shape=3,num_layers=32))
 model.add(MyLayerRelu())
 model.add(MyLayer(filter_shape= 3,num_layers=64))
 model.add(MyLayerRelu())
-# model.add(MyLayerDropout(0.25, seed =0))
+model.add(MyLayerDropout(0.25, seed =0))
 model.add(MyFlatten())
 model.add(MyLayerDense(128))
 model.add(MyLayerDenseRelu())
-# model.add(MyLayerDenseDropout(0.5, seed=0))
+model.add(MyLayerDenseDropout(0.5, seed=0))
 model.add(MyLayerDense(10))
 
 
@@ -122,7 +122,7 @@ model.fit(x_train, y_train,
           verbose=1,
           validation_data=(x_test, y_test))
 
-im= keras.models.Model(inputs = model.input, outputs=model.layers[0].output)
-imd= im.predict(x_train)
-print(imd)
+# im= keras.models.Model(inputs = model.input, outputs=model.layers[0].output)
+# imd= im.predict(x_train)
+# print(imd)
 

@@ -15,7 +15,7 @@ from keras.optimizers import SGD
 import keras.backend as K
 import numpy as np
 import keras
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import tensorflow as tf
 
 
@@ -30,8 +30,8 @@ def customloss(y_true, y_pred):
 	output = var/scale
 	y_true = K.clip(y_true, K.epsilon(), 1)
 	opt1 = K.sum((output-1)*K.log(y_true),axis=-1)
-	opt2 = K.sum(K.exp(tf.lgamma(output)),axis=-1)
-	opt3 = K.exp(tf.lgamma(K.sum(output,axis=-1)))
+	opt2 = K.sum(tf.lgamma(output),axis=-1)
+	opt3 = tf.lgamma(K.sum(output,axis=-1))
 	return opt2-opt1-opt3
 
 	
@@ -79,7 +79,6 @@ model = Sequential()
 
 
 
-model.add(MyLayer(filter_shape=3,num_layers=5))
 model.add(Conv2D(32, kernel_size=(3, 3),
                  activation='relu',
                  input_shape=(28,28,1)))
