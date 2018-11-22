@@ -19,11 +19,28 @@ import tensorflow as tf
 
 
 def customloss(y_true, y_pred):
+	c1=0.5
+	c2=0.5
+	y=int(K.int_shape(y_pred)[1]/2)
+	var = K.softmax(y_pred[:,0:y])
+	scale = c1 + c2*K.sqrt(K.sum(var*y_pred[:,y:2*y],axis=-1))
+	scale = K.expand_dims(scale,axis=-1)
+	scale = K.repeat_elements(scale,y,axis=-1)
+	output = var/scale
 	y_true = K.clip(y_true, K.epsilon(), 1)
-	opt1 = K.sum(K.dot((y_pred-1),K.log(y_true)),axis=-1)
-	opt2 = K.sum(K.exp(tf.lgamma(y_pred)),axis=-1)
-	opt3 = K.exp(tf.lgamma(K.sum(y_pred,axis=-1)))
+	opt1 = K.sum((output-1)*K.log(y_true),axis=-1)
+	opt2 = K.sum(K.exp(tf.lgamma(output)),axis=-1)
+	opt3 = K.exp(tf.lgamma(K.sum(output,axis=-1)))
 	return opt2-opt1-opt3
+
+	
+
+
+def custom_metric(y_true, y_pred):
+	y=int(K.int_shape(y_pred)[1]/2)
+	return keras.metrics.categorical_accuracy(y_true, y_pred[:,0:y])
+
+
 
 num_classes=10
 batch_size = 128
@@ -53,10 +70,9 @@ y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
-y_train = y_train + 0.001*K.random_normal(K.shape(y_train))
-y_test= y_test + 0.001*K.random_normal(K.shape(y_test))
+y_train = y_train + 0.001*np.random.randn(np.shape(y_train)[0],np.shape(y_train)[1])
+y_test= y_test + 0.001*np.random.randn(np.shape(y_test)[0],np.shape(y_test)[1])
 
-print(np.shape(y_train))
 
 model = Sequential()
 
@@ -83,11 +99,9 @@ model.add(Dropout(0.5))
 #output a softmax to squash the matrix into output probabilities
 model.add(Dense(20))
 
-model.add(DirichletLayer(0.5,0.5))
-
 
 sgd = SGD(lr=0.01, decay=0.003, momentum=0.9, nesterov=True)
-model.compile(loss=customloss, optimizer=sgd, metrics=['accuracy'])
+model.compile(loss=customloss, optimizer=sgd, metrics=[custom_metric])
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,

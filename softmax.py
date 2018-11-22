@@ -18,12 +18,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 
-def customloss(y_true, y_pred):
-	y_true = K.clip(y_true, K.epsilon(), 1)
-	opt1 = K.sum(K.dot((y_pred-1),K.log(y_true)),axis=-1)
-	opt2 = K.sum(K.exp(tf.lgamma(y_pred)),axis=-1)
-	opt3 = K.exp(tf.lgamma(K.sum(y_pred,axis=-1)))
-	return opt2-opt1-opt3
 
 num_classes=10
 batch_size = 128

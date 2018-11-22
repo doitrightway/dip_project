@@ -16,7 +16,6 @@ class MyLayer(Layer):
         # Create a trainable weight variable for this layer.
         y= int(input_shape[3]/2)
         # print(y)
-        # print("hello")
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(self.filter_shape,
                                         self.filter_shape, y,self.num_layers),
@@ -126,6 +125,8 @@ class MyFlatten(Layer):
     def compute_output_shape(self, input_shape):
         return (input_shape[0],input_shape[1]*input_shape[2]*input_shape[3])
 
+################
+
 def dropped_inputs(x, rate, noise_shape, seed):
     y=int(K.int_shape(x)[3]/2)
     return K.concatenate([K.dropout(x[:,:,:,0:y], rate, noise_shape, seed=seed),
@@ -137,6 +138,7 @@ def dropped_dense_inputs(x, rate, noise_shape, seed):
     return K.concatenate([K.dropout(x[:,0:y], rate, noise_shape, seed=seed),
       K.dropout(x[:,y:K.int_shape(x)[1]],rate, noise_shape, seed = seed)])
 
+##############
 
 class MyLayerDropout(Layer):
 
@@ -155,6 +157,9 @@ class MyLayerDropout(Layer):
     def compute_output_shape(self, input_shape):
         return input_shape
 
+
+
+#############
 
 class MyLayerDenseDropout(Layer):
 
