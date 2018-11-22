@@ -1,12 +1,13 @@
 from keras.models import Sequential
 from keras.layers import Dense
-from cus import MyLayer
-from cus import MyLayerDense
-from cus import MyLayerRelu
-from cus import MyLayerDenseRelu
-from cus import MyLayerDenseDropout
-from cus import MyFlatten
-from cus import DirichletLayer
+from layers import MyLayer
+from layers import MyLayerDense
+from layers import MyLayerRelu
+from layers import MyLayerDenseRelu
+from layers import MyLayerDenseDropout
+from layers import MyLayerDropout
+from layers import MyFlatten
+from layers import DirichletLayer
 from keras.datasets import mnist
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
@@ -34,7 +35,7 @@ epochs=10
 # plt.show()
 
 x_train=x_train/255;
-y_train=y_train/255;
+x_test=x_test/255;
 
 x_train = x_train.reshape((np.shape(x_train)+(1,)))
 x_test = x_test.reshape((np.shape(x_test)+(1,)))
