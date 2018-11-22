@@ -25,7 +25,7 @@ class MyLayer(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
-        return K.concatenate([K.conv2d(x[:,:,:,0:y],self.kernel),
+        return K.concatenate([K.conv2d(x[:,:,:,0:y],K.square(self.kernel)),
           K.conv2d(x[:,:,:,y:2*y],K.square(self.kernel))])
 
     def compute_output_shape(self, input_shape):
@@ -50,7 +50,7 @@ class MyLayerDense(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
-        return K.concatenate([K.dot(x[:,0:y], self.kernel),K.dot(x[:,y:2*y], K.square(self.kernel))])
+        return K.concatenate([K.dot(x[:,0:y], K.square(self.kernel)),K.dot(x[:,y:2*y], K.square(self.kernel))])
 
     def compute_output_shape(self, input_shape):
           return (input_shape[0], 2*self.output_dim)
