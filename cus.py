@@ -103,12 +103,15 @@ class MyLayerDropout(Layer):
 
             def dropped_inputs():
             	y=int(K.int_shape(x)[3]/2)
-                return K.concatenate([K.dropout(x[:,:,:,0:y], self.rate),
-                	K.dropout(x[:,:,:,y:K.int_shape(x)[3]],self.rate)])
+                return K.concatenate([K.dropout(x[:,:,:,0:y], self.rate,self.noise_shape,seed=self.seed),
+                	K.dropout(x[:,:,:,y:K.int_shape(x)[3]],self.rate,self.noise_shape,seed=self.seed)])
             return K.in_train_phase(dropped_inputs, x,
                                     training=training)
         return x
 
     def compute_output_shape(self, input_shape):
         return input_shape
+
+
+class MyLayerMaxPooling(Layer):
 
