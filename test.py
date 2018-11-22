@@ -1,6 +1,6 @@
 from keras.models import Sequential
 from keras.layers import Dense
-from cus import MyLayer
+# from cus import MyLayer
 from keras.datasets import mnist
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 num_classes=10
 batch_size = 128
-epochs=40
+epochs=10
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 # for i in range(9):

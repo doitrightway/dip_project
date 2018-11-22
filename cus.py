@@ -79,3 +79,36 @@ class MyLayerRelu(Layer):
         return (input_shape[0], input_shape[1]-self.filter_shape+1,
           input_shape[1]-self.filter_shape+1,2*self.num_layers)
 
+
+class MyLayerDropout(Layer):
+
+	def __init__(self, rate, noise_shape=None, seed=None, **kwargs):
+        self.rate = min(1., max(0., rate))
+        self.noise_shape = noise_shape
+        self.seed = seed
+        # self.supports_masking = True
+        super(MyLayerDropout, self).__init__(**kwargs)
+
+    # def _get_noise_shape(self, inputs):
+    #     if self.noise_shape is None:
+    #         return self.noise_shape
+
+    #     symbolic_shape = K.shape(inputs)
+    #     noise_shape = [symbolic_shape[axis] if shape is None else shape
+    #                    for axis, shape in enumerate(self.noise_shape)]
+    #     return tuple(noise_shape)
+
+    def call(self, x):
+        if 0. < self.rate < 1.:
+
+            def dropped_inputs():
+            	y=int(K.int_shape(x)[3]/2)
+                return K.concatenate([K.dropout(x[:,:,:,0:y], self.rate),
+                	K.dropout(x[:,:,:,y:K.int_shape(x)[3]],self.rate)])
+            return K.in_train_phase(dropped_inputs, x,
+                                    training=training)
+        return x
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
