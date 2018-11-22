@@ -5,6 +5,7 @@ from layers import MyLayerDense
 from layers import MyLayerRelu
 from layers import MyLayerDenseRelu
 from layers import MyLayerDenseDropout
+from layers import MyLayerDropout
 from layers import MyFlatten
 from layers import DirichletLayer
 from keras.datasets import mnist
@@ -28,6 +29,7 @@ def customloss(y_true, y_pred):
 num_classes=10
 batch_size = 128
 epochs=10
+# (x_train, y_train), (x_test, y_test) = mnist.load_data()
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 # for i in range(9):
@@ -45,10 +47,13 @@ y_train=y_train/255;
 x_train = x_train.reshape((np.shape(x_train)+(1,)))
 x_test = x_test.reshape((np.shape(x_test)+(1,)))
 
-noise_train = 0.01*np.random.randn(np.shape(x_train))
+train_shape = np.shape(x_train)
+
+noise_train = 0.01*np.random.randn(train_shape[0],train_shape[1],train_shape[2],train_shape[3])
 x_train= np.concatenate([x_train,noise_train],axis=-1)
 
-noise_test = 0.01*np.random.randn(np.shape(x_test))
+test_shape = np.shape(x_test)
+noise_test = 0.01*np.random.randn(test_shape[0],test_shape[1],test_shape[2],test_shape[3])
 x_test= np.concatenate([x_test,noise_test])
 
 
@@ -59,8 +64,8 @@ y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
-y_train = y_train + 0.001*K.random_nomral(K.shape(y_train))
-y_test= y_test + 0.001*K.random_nomral(K.shape(y_test))
+y_train = y_train + 0.001*K.random_normal(K.shape(y_train))
+y_test= y_test + 0.001*K.random_normal(K.shape(y_test))
 
 model = Sequential()
 
@@ -68,10 +73,11 @@ model.add(MyLayer(filter_shape=3,num_layers=32))
 model.add(MyLayerRelu())
 model.add(MyLayer(filter_shape= 3,num_layers=64))
 model.add(MyLayerRelu())
+model.add(MyLayerDropout(0.25, seed =0))
 model.add(MyFlatten())
 model.add(MyLayerDense(128))
 model.add(MyLayerDenseRelu())
-model.add(MyLayerDenseDropout())
+model.add(MyLayerDenseDropout(0.5, seed=0))
 model.add(MyLayerDense(10))
 model.add(DirichletLayer(0.5,0.5))
 
