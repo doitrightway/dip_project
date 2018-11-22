@@ -121,16 +121,16 @@ class MyFlatten(Layer):
         return (input_shape[0],input_shape[1]*input_shape[2]*input_shape[3])
 
 
-def dropped_inputs():
+def dropped_inputs(x, rate, noise_shape, seed):
     y=int(K.int_shape(x)[3]/2)
-    return K.concatenate([K.dropout(x[:,:,:,0:y], self.rate, self.noise_shape, seed=self.seed),
-      K.dropout(x[:,:,:,y:K.int_shape(x)[3]],self.rate, self.noise_shape, seed = self.seed)])
+    return K.concatenate([K.dropout(x[:,:,:,0:y], rate, noise_shape, seed=seed),
+      K.dropout(x[:,:,:,y:K.int_shape(x)[3]],rate, noise_shape, seed = seed)])
 
 
-def dropped_dense_inputs():
+def dropped_dense_inputs(x, rate, noise_shape, seed):
     y=int(K.int_shape(x)[3]/2)
-    return K.concatenate([K.dropout(x[:,0:y], self.rate, self.noise_shape, seed=self.seed),
-      K.dropout(x[:,y:K.int_shape(x)[1]],self.rate, self.noise_shape, seed = self.seed)])
+    return K.concatenate([K.dropout(x[:,0:y], rate, noise_shape, seed=seed),
+      K.dropout(x[:,y:K.int_shape(x)[1]],rate, noise_shape, seed = seed)])
 
 
 class MyLayerDropout(Layer):
@@ -143,7 +143,7 @@ class MyLayerDropout(Layer):
 
     def call(self, x):
         if 0. < self.rate < 1.:
-            return K.in_train_phase(dropped_inputs, x,
+            return K.in_train_phase((lambda : dropped_inputs(x, self.rate, self.noise_shape, self.seed)), x,
                                     training=training)
         return x
 
@@ -161,7 +161,7 @@ class MyLayerDenseDropout(Layer):
 
     def call(self, x):
         if 0. < self.rate < 1.:
-            return K.in_train_phase(dropped_dense_inputs, x,
+            return K.in_train_phase((lambda : dropped_dense_inputs(x, self.rate, self.noise_shape, self.seed)), x,
                                     training=training)
         return x
 
