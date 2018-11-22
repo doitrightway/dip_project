@@ -180,7 +180,7 @@ class DirichletLayer(Layer):
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
         var = K.softmax(x[:,0:y])
-        scale = self.c1 + self.c2*K.sqrt(K.sum(var*x[:,y,2*y],axis=-1))
+        scale = self.c1 + self.c2*K.sqrt(K.sum(var*x[:,y:2*y],axis=-1))
         scale = K.expand_dims(scale,axis=-1)
         scale = K.repeat_elements(scale,y,axis=-1)
         return var/scale
