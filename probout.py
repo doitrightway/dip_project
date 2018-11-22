@@ -53,8 +53,8 @@ y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
-y_train = y_train + 0.001*K.random_nomral(K.shape(y_train))
-y_test= y_test + 0.001*K.random_nomral(K.shape(y_test))
+y_train = y_train + 0.001*K.random_normal(K.shape(y_train))
+y_test= y_test + 0.001*K.random_normal(K.shape(y_test))
 
 print(np.shape(y_train))
 

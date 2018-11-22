@@ -3,6 +3,7 @@ from keras.engine.topology import Layer
 import tensorflow_probability as tfp
 import tensorflow as tf
 from keras.layers import Lambda
+from keras.layers.pooling import _Pooling2D
 
 class MyLayer(Layer):
 
@@ -14,6 +15,8 @@ class MyLayer(Layer):
     def build(self, input_shape):
         # Create a trainable weight variable for this layer.
         y= int(input_shape[3]/2)
+        # print(y)
+        # print("hello")
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(self.filter_shape,
                                         self.filter_shape, y,self.num_layers),
@@ -51,7 +54,7 @@ class MyLayerDense(Layer):
         return K.concatenate([K.dot(x[:,0:y], self.kernel),K.dot(x[:,y:2*y], self.kernel)])
 
     def compute_output_shape(self, input_shape):
-          return (input_shape[0], self.output_dim)
+          return (input_shape[0], 2*self.output_dim)
 
 
 class MyLayerRelu(Layer):
@@ -65,6 +68,7 @@ class MyLayerRelu(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
+        # print(y, " kumar ")
         z= Lambda(lambda inputs: inputs[0]/inputs[1] if inputs[1]!=0 else 1000000)([x[:,:,:,0:y],x[:,:,:,y:2*y]])
         tfd = tfp.distributions
         dist = tfd.Normal(loc=0., scale=1.)

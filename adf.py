@@ -21,7 +21,7 @@ import tensorflow as tf
 
 def customloss(y_true, y_pred):
 	y_true = K.clip(y_true, K.epsilon(), 1)
-	opt1 = K.sum(K.dot((y_pred-1),K.log(y_true)),axis=-1)
+	opt1 = K.sum((y_pred-1)*K.log(y_true),axis=-1)
 	opt2 = K.sum(K.exp(tf.lgamma(y_pred)),axis=-1)
 	opt3 = K.exp(tf.lgamma(K.sum(y_pred,axis=-1)))
 	return opt2-opt1-opt3
@@ -54,18 +54,19 @@ x_train= np.concatenate([x_train,noise_train],axis=-1)
 
 test_shape = np.shape(x_test)
 noise_test = 0.01*np.random.randn(test_shape[0],test_shape[1],test_shape[2],test_shape[3])
-x_test= np.concatenate([x_test,noise_test])
-
+x_test= np.concatenate([x_test,noise_test],axis=-1)
 
 
 print(np.shape(x_train))
+
+
 
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
-y_train = y_train + 0.001*K.random_normal(K.shape(y_train))
-y_test= y_test + 0.001*K.random_normal(K.shape(y_test))
+y_train = y_train + 0.001*np.random.randn(np.shape(y_train)[0],np.shape(y_train)[1])
+y_test= y_test + 0.001*np.random.randn(np.shape(y_test)[0],np.shape(y_test)[1])
 
 model = Sequential()
 
