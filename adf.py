@@ -14,7 +14,7 @@ from keras.optimizers import SGD
 import keras.backend as K
 import numpy as np
 import keras
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import tensorflow as tf
 
 
@@ -66,7 +66,7 @@ model = Sequential()
 
 model.add(MyLayer(filter_shape=3,num_layers=32))
 model.add(MyLayerRelu())
-model.add(MyLayer(filter_shape= 3,num_layers=64)
+model.add(MyLayer(filter_shape= 3,num_layers=64))
 model.add(MyLayerRelu())
 model.add(MyFlatten())
 model.add(MyLayerDense(128))
