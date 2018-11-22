@@ -60,10 +60,10 @@ epochs=1
 # (x_train, y_train), (x_test, y_test) = mnist.load_data()
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-x_train = x_train[0:100,:,:]
-y_train = y_train[0:100]
-x_test = x_test[0:100,:,:]
-y_test = y_test[0:100]
+x_train = x_train[0:1,:,:]
+y_train = y_train[0:1]
+x_test = x_test[0:1,:,:]
+y_test = y_test[0:1]
 
 # for i in range(9):
 #   plt.subplot(3,3,i+1)
@@ -122,7 +122,7 @@ model.fit(x_train, y_train,
           verbose=1,
           validation_data=(x_test, y_test))
 
-im= keras.models.Model(inputs = model.input, outputs=model.layers[7].output)
+im= keras.models.Model(inputs = model.input, outputs=model.layers[0].output)
 imd= im.predict(x_train)
 print(imd)
 
