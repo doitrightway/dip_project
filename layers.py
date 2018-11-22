@@ -1,6 +1,7 @@
 from keras import backend as K
 from keras.engine.topology import Layer
 import tensorflow_probability as tfp
+from keras.layers import Lambda
 
 class MyLayer(Layer):
 
@@ -45,7 +46,7 @@ class MyLayerDense(Layer):
           super(MyLayerDense, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
-        y=int(K.int_shape(x)[3]/2)
+        y=int(K.int_shape(x)[1]/2)
         return K.concatenate([K.dot(x[:,0:y], self.kernel),K.dot(x[:,y:2*y], self.kernel)])
 
     def compute_output_shape(self, input_shape):
@@ -68,9 +69,9 @@ class MyLayerRelu(Layer):
         dist = tfd.Normal(loc=0., scale=1.)
         var1 = dist.cdf(z)
         var2 = dist.prob(z)
-        mean = K.dot(x[:,:,:,0:y],var1) + K.dot(x[:,:,:,y:2*y],var2)
-        var3 = K.dot(x[:,:,:,0:y]+x[:,:,:,y:2*y],var1) 
-        var4 = K.dot(K.dot(x[:,:,:,0:y],x[:,:,:,y:2*y]),var2)
+        mean = x[:,:,:,0:y]*var1 + x[:,:,:,y:2*y]*var2
+        var3 = (x[:,:,:,0:y]+x[:,:,:,y:2*y])*var1
+        var4 = x[:,:,:,0:y]*x[:,:,:,y:2*y]*var2
         variance = var3+var4-K.square(mean)
         return K.concatenate([mean,variance])
 
@@ -94,9 +95,9 @@ class MyLayerDenseRelu(Layer):
         dist = tfd.Normal(loc=0., scale=1.)
         var1 = dist.cdf(z)
         var2 = dist.prob(z)
-        mean = K.dot(x[:,0:y],var1) + K.dot(x[:,y:2*y],var2)
-        var3 = K.dot(x[:,0:y]+x[:,y:2*y],var1) 
-        var4 = K.dot(K.dot(x[:,0:y],x[:,y:2*y]),var2)
+        mean = x[:,0:y]*var1 + x[:,y:2*y]*var2
+        var3 = (x[:,0:y]+x[:,y:2*y])*var1 
+        var4 = x[:,0:y]*x[:,y:2*y]*var2
         variance = var3+var4-K.square(mean)
         return K.concatenate([mean,variance])
 
@@ -128,7 +129,7 @@ def dropped_inputs(x, rate, noise_shape, seed):
 
 
 def dropped_dense_inputs(x, rate, noise_shape, seed):
-    y=int(K.int_shape(x)[3]/2)
+    y=int(K.int_shape(x)[1]/2)
     return K.concatenate([K.dropout(x[:,0:y], rate, noise_shape, seed=seed),
       K.dropout(x[:,y:K.int_shape(x)[1]],rate, noise_shape, seed = seed)])
 
@@ -141,7 +142,7 @@ class MyLayerDropout(Layer):
         self.seed = seed
         super(MyLayerDropout, self).__init__(**kwargs)
 
-    def call(self, x):
+    def call(self, x, training=None):
         if 0. < self.rate < 1.:
             return K.in_train_phase((lambda : dropped_inputs(x, self.rate, self.noise_shape, self.seed)), x,
                                     training=training)
@@ -159,7 +160,7 @@ class MyLayerDenseDropout(Layer):
         self.seed = seed
         super(MyLayerDenseDropout, self).__init__(**kwargs)
 
-    def call(self, x):
+    def call(self, x, training= None):
         if 0. < self.rate < 1.:
             return K.in_train_phase((lambda : dropped_dense_inputs(x, self.rate, self.noise_shape, self.seed)), x,
                                     training=training)
@@ -179,7 +180,7 @@ class DirichletLayer(Layer):
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
         var = K.softmax(x[:,0:y])
-        scale = self.c1 + self.c2*K.sqrt(K.sum(K.dot(var,x[:,y,2*y]),axis=-1))
+        scale = self.c1 + self.c2*K.sqrt(K.sum(var*x[:,y,2*y],axis=-1))
         scale = K.expand_dims(scale,axis=-1)
         scale = K.repeat_elements(scale,y,axis=-1)
         return var/scale
