@@ -7,6 +7,7 @@ from layers import MyLayerDenseRelu
 from layers import MyLayerDenseDropout
 from layers import MyLayerDropout
 from layers import MyFlatten
+from layers import MyLayerMaxPool
 from layers import DirichletLayer
 from keras.datasets import mnist
 from keras.layers import Dense, Dropout, Flatten
@@ -33,7 +34,7 @@ def customloss(y_true, y_pred):
 	opt1 = K.sum((output-1)*K.log(y_true),axis=-1)
 	opt2 = K.sum(tf.lgamma(output),axis=-1)
 	opt3 = tf.lgamma(K.sum(output,axis=-1))
-	return opt2-opt1-opt3
+	return K.exp(opt2-opt1-opt3)
 
 
 def gaussianloss(y_true, y_pred):
@@ -60,10 +61,12 @@ epochs=1
 # (x_train, y_train), (x_test, y_test) = mnist.load_data()
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-x_train = x_train[0:1000,:,:]
-y_train = y_train[0:1000]
-x_test = x_test[0:1000,:,:]
-y_test = y_test[0:1000]
+
+size=128*64
+x_train = x_train[0:size,:,:]
+y_train = y_train[0:size]
+x_test = x_test[0:size,:,:]
+y_test = y_test[0:size]
 
 # for i in range(9):
 #   plt.subplot(3,3,i+1)
@@ -89,7 +92,7 @@ noise_test = 0.01*np.abs(np.random.randn(test_shape[0],test_shape[1],test_shape[
 x_test= np.concatenate([x_test,noise_test],axis=-1)
 
 
-print(np.shape(x_train))
+# print(np.shape(x_train))
 
 
 
@@ -105,6 +108,7 @@ model = Sequential()
 model.add(MyLayer(filter_shape=3,num_layers=32))
 model.add(MyLayerRelu())
 model.add(MyLayer(filter_shape= 3,num_layers=64))
+model.add(MyLayerMaxPool(pool_size=(2, 2)))
 model.add(MyLayerRelu())
 model.add(MyLayerDropout(0.25, seed =0))
 model.add(MyFlatten())
@@ -115,7 +119,7 @@ model.add(MyLayerDense(10))
 
 
 sgd = SGD(lr=0.01, decay=0.003, momentum=0.9, nesterov=True)
-model.compile(loss=gaussianloss, optimizer=sgd, metrics=[custom_metric])
+model.compile(loss=customloss, optimizer=sgd, metrics=[custom_metric])
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,

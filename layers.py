@@ -206,35 +206,36 @@ class MyLayerMaxPool(_Pooling2D):
 
     def _pooling_function(self, inputs, pool_size, strides,
                           padding, data_format):
-        y=K.int_shape(x)
+        y=K.int_shape(inputs)
         i1=range(0,y[1],2)
         i2=range(1,y[1],2)
         j1=range(0,y[2],2)
         j2=range(1,y[2],2)
-        p1=[[[[k,i,j] for j in j1] for i in i1] for k in range(0,y[0])]
-        p2=[[[[k,i,j] for j in j2] for i in i1] for k in range(0,y[0])]
-        p3=[[[[k,i,j] for j in j1] for i in i2] for k in range(0,y[0])]
-        p4=[[[[k,i,j] for j in j2] for i in i2] for k in range(0,y[0])]
-        x1=tf.gather(inputs,p1)
-        x2=tf.gather(inputs,p2)
-        x3=tf.gather(inputs,p3)
-        x4=tf.gather(inputs,p4)
+        p1=[[[[k,i,j] for j in j1] for i in i1] for k in range(0,128)]
+        p2=[[[[k,i,j] for j in j2] for i in i1] for k in range(0,128)]
+        p3=[[[[k,i,j] for j in j1] for i in i2] for k in range(0,128)]
+        p4=[[[[k,i,j] for j in j2] for i in i2] for k in range(0,128)]
+        x1=tf.gather_nd(inputs,p1)
+        x2=tf.gather_nd(inputs,p2)
+        x3=tf.gather_nd(inputs,p3)
+        x4=tf.gather_nd(inputs,p4)
         def get_mean(a1,a2):
-            m1=a1[:,:,:,0:y[3]/2]
-            m2=a2[:,:,:,0:y[3]/2]
-            v1=a1[:,:,:,y[3]/2:y[3]]
-            v2=a2[:,:,:,y[3]/2:y[3]]
+            h1=int(y[3]/2)
+            h2=int(y[3])
+            m1=a1[:,:,:,0:h1]
+            m2=a2[:,:,:,0:h1]
+            v1=a1[:,:,:,h1:h2]
+            v2=a2[:,:,:,h1:h2]
             di=m1-m2
-            sum_sq=K.sqrt(v1*v1+v2*v2)
+            sum_sq=K.sqrt(v1+v2)
             alpha=di/sum_sq
             tfd = tfp.distributions
             dist = tfd.Normal(loc=0., scale=1.)
             var1 = dist.cdf(alpha)
             var2 = dist.prob(alpha)
             mean1=sum_sq*var2+di*var1+m2
-            variance1=(m1+m2)*sum_sq*var2+(m1*m1+v1*v1)*var1+(m2*m2+v2*v2)*(1-var1)-mean1*mean1
+            variance1=(m1+m2)*sum_sq*var2+(m1*m1+v1)*var1+(m2*m2+v2)*(1-var1)-mean1*mean1
             return K.concatenate([mean1,variance1])
-
         return get_mean(get_mean(x1,x3),get_mean(x2,x4))
 
 
