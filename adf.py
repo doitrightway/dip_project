@@ -7,6 +7,7 @@ from layers import MyLayerDenseRelu
 from layers import MyLayerDenseDropout
 from layers import MyLayerDropout
 from layers import MyFlatten
+from layers import MyLayerMaxPool
 from layers import DirichletLayer
 from keras.datasets import mnist
 from keras.layers import Dense, Dropout, Flatten
@@ -70,7 +71,7 @@ epochs=10
 # plt.show()
 
 x_train=x_train/255;
-y_train=y_train/255;
+x_test=x_test/255;
 
 x_train = x_train.reshape((np.shape(x_train)+(1,)))
 x_test = x_test.reshape((np.shape(x_test)+(1,)))
@@ -101,12 +102,13 @@ model = Sequential()
 model.add(MyLayer(filter_shape=3,num_layers=32))
 model.add(MyLayerRelu())
 model.add(MyLayer(filter_shape= 3,num_layers=64))
+model.add(MyLayerMaxPool(pool_size=(2, 2)))
 model.add(MyLayerRelu())
-# model.add(MyLayerDropout(0.25, seed =0))
+model.add(MyLayerDropout(0.25, seed =0))
 model.add(MyFlatten())
 model.add(MyLayerDense(128))
 model.add(MyLayerDenseRelu())
-# model.add(MyLayerDenseDropout(0.5, seed=0))
+model.add(MyLayerDenseDropout(0.5, seed=0))
 model.add(MyLayerDense(10))
 
 
