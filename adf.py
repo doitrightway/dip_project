@@ -57,9 +57,14 @@ def custom_metric(y_true, y_pred):
 
 num_classes=10
 batch_size = 128
-epochs=10
+epochs=1
 # (x_train, y_train), (x_test, y_test) = mnist.load_data()
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+x_train = x_train[0:1,:,:]
+y_train = y_train[0:1]
+x_test = x_test[0:1,:,:]
+y_test = y_test[0:1]
 
 # for i in range(9):
 #   plt.subplot(3,3,i+1)
@@ -71,18 +76,17 @@ epochs=10
 # plt.show()
 
 x_train=x_train/255;
-x_test=x_test/255;
+x_test= x_test/255;
 
 x_train = x_train.reshape((np.shape(x_train)+(1,)))
 x_test = x_test.reshape((np.shape(x_test)+(1,)))
 
 train_shape = np.shape(x_train)
-
-noise_train = 0.01*np.random.randn(train_shape[0],train_shape[1],train_shape[2],train_shape[3])
+noise_train = 0.01*np.abs(np.random.randn(train_shape[0],train_shape[1],train_shape[2],train_shape[3]))
 x_train= np.concatenate([x_train,noise_train],axis=-1)
 
 test_shape = np.shape(x_test)
-noise_test = 0.01*np.random.randn(test_shape[0],test_shape[1],test_shape[2],test_shape[3])
+noise_test = 0.01*np.abs(np.random.randn(test_shape[0],test_shape[1],test_shape[2],test_shape[3]))
 x_test= np.concatenate([x_test,noise_test],axis=-1)
 
 
@@ -94,8 +98,8 @@ y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
-# y_train = y_train + 0.001*np.random.randn(np.shape(y_train)[0],np.shape(y_train)[1])
-# y_test= y_test + 0.001*np.random.randn(np.shape(y_test)[0],np.shape(y_test)[1])
+y_train = y_train + 0.001*np.random.randn(np.shape(y_train)[0],np.shape(y_train)[1])
+y_test= y_test + 0.001*np.random.randn(np.shape(y_test)[0],np.shape(y_test)[1])
 
 model = Sequential()
 
@@ -113,10 +117,14 @@ model.add(MyLayerDense(10))
 
 
 sgd = SGD(lr=0.01, decay=0.003, momentum=0.9, nesterov=True)
-model.compile(loss=meanloss, optimizer=sgd, metrics=[custom_metric])
+model.compile(loss=gaussianloss, optimizer=sgd, metrics=[custom_metric])
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
           verbose=1,
           validation_data=(x_test, y_test))
+
+im= keras.models.Model(inputs = model.input, outputs=model.layers[0].output)
+imd= im.predict(x_train)
+print(imd)
 

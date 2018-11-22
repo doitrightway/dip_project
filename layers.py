@@ -4,6 +4,7 @@ import tensorflow_probability as tfp
 import tensorflow as tf
 from keras.layers import Lambda
 from keras.layers.pooling import _Pooling2D
+import keras
 
 class MyLayer(Layer):
 
@@ -19,14 +20,14 @@ class MyLayer(Layer):
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(self.filter_shape,
                                         self.filter_shape, y,self.num_layers),
-                                      initializer='uniform',
+                                      initializer=keras.initializers.RandomNormal(mean=0.0, stddev=0.05, seed=None),
                                       trainable=True)
         super(MyLayer, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
         return K.concatenate([K.conv2d(x[:,:,:,0:y],self.kernel),
-          K.conv2d(x[:,:,:,y:2*y],self.kernel)])
+          K.conv2d(x[:,:,:,y:2*y],K.square(self.kernel))])
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1]-self.filter_shape+1,
@@ -44,13 +45,13 @@ class MyLayerDense(Layer):
           y=int(input_shape[1]/2)
           self.kernel = self.add_weight(name='kernel', 
                                         shape=(y, self.output_dim),
-                                        initializer='uniform',
+                                        initializer=keras.initializers.RandomNormal(mean=0.0, stddev=0.05, seed=None),
                                         trainable=True)
           super(MyLayerDense, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
-        return K.concatenate([K.dot(x[:,0:y], self.kernel),K.dot(x[:,y:2*y], self.kernel)])
+        return K.concatenate([K.dot(x[:,0:y],self.kernel),K.dot(x[:,y:2*y], K.square(self.kernel))])
 
     def compute_output_shape(self, input_shape):
           return (input_shape[0], 2*self.output_dim)
@@ -68,14 +69,14 @@ class MyLayerRelu(Layer):
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
         # print(y, " kumar ")
-        z= Lambda(lambda inputs: inputs[0]/inputs[1] if inputs[1]!=0 else 1000000)([x[:,:,:,0:y],x[:,:,:,y:2*y]])
+        z= Lambda(lambda inputs: inputs[0]/K.sqrt(inputs[1]) if inputs[1]!=0 else 1000000)([x[:,:,:,0:y],x[:,:,:,y:2*y]])
         tfd = tfp.distributions
         dist = tfd.Normal(loc=0., scale=1.)
         var1 = dist.cdf(z)
         var2 = dist.prob(z)
-        mean = x[:,:,:,0:y]*var1 + x[:,:,:,y:2*y]*var2
+        mean = x[:,:,:,0:y]*var1 + K.sqrt(x[:,:,:,y:2*y])*var2
         var3 = (x[:,:,:,0:y]+x[:,:,:,y:2*y])*var1
-        var4 = x[:,:,:,0:y]*x[:,:,:,y:2*y]*var2
+        var4 = x[:,:,:,0:y]*K.sqrt(x[:,:,:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
         return K.concatenate([mean,variance])
 
@@ -94,14 +95,14 @@ class MyLayerDenseRelu(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
-        z= Lambda(lambda inputs: inputs[0]/inputs[1] if inputs[1]!=0 else 1000000)([x[:,0:y],x[:,y:2*y]])
+        z= Lambda(lambda inputs: inputs[0]/K.sqrt(inputs[1]) if inputs[1]!=0 else 1000000)([x[:,0:y],x[:,y:2*y]])
         tfd = tfp.distributions
         dist = tfd.Normal(loc=0., scale=1.)
         var1 = dist.cdf(z)
         var2 = dist.prob(z)
-        mean = x[:,0:y]*var1 + x[:,y:2*y]*var2
+        mean = x[:,0:y]*var1 + K.sqrt(x[:,y:2*y])*var2
         var3 = (x[:,0:y]+x[:,y:2*y])*var1 
-        var4 = x[:,0:y]*x[:,y:2*y]*var2
+        var4 = x[:,0:y]*K.sqrt(x[:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
         return K.concatenate([mean,variance])
 
