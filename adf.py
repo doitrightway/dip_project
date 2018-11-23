@@ -59,6 +59,8 @@ def custom_metric(y_true, y_pred):
 num_classes=10
 batch_size = 128
 epochs=10
+# (x_train, y_train), (x_test, y_test) = mnist.load_data()
+
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 # (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
@@ -69,6 +71,8 @@ x_train = x_train[0:size1,:,:]
 y_train = y_train[0:size1]
 x_test = x_test[0:size2,:,:]
 y_test = y_test[0:size2]
+
+
 
 # for i in range(9):
 #   plt.subplot(3,3,i+1)
@@ -123,12 +127,20 @@ checkpoint = keras.callbacks.ModelCheckpoint('adf.{epoch:02d}.hdf5', monitor='va
 
 sgd = SGD(lr=0.01, decay=0.003, momentum=0.9, nesterov=True)
 model.compile(loss=customloss, optimizer=sgd, metrics=[custom_metric])
+<<<<<<< HEAD
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
           verbose=1,
           validation_data=(x_test, y_test),
           callbacks=[checkpoint])
+
+
+# model.fit(x_train, y_train,
+#           batch_size=batch_size,
+#           epochs=epochs,
+#           verbose=1,
+#           validation_data=(x_test, y_test))
 
 
 # im= keras.models.Model(inputs = model.input, outputs=model.layers[0].output)

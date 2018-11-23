@@ -26,7 +26,7 @@ class MyLayer(Layer):
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
         return K.concatenate([K.conv2d(x[:,:,:,0:y],self.kernel),
-          K.conv2d(x[:,:,:,y:2*y],K.square(self.kernel))])
+          K.conv2d(x[:,:,:,y:2*y],K.square(self.kernel))+K.epsilon()])
 
     def get_config(self):
         config={'num_layers':self.num_layers,
@@ -60,7 +60,7 @@ class MyLayerDense(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
-        return K.concatenate([K.dot(x[:,0:y],self.kernel),K.dot(x[:,y:2*y], K.square(self.kernel))])
+        return K.concatenate([K.dot(x[:,0:y],self.kernel),K.dot(x[:,y:2*y], K.square(self.kernel)+K.epsilon())])
 
     def compute_output_shape(self, input_shape):
           return (input_shape[0], 2*self.output_dim)
@@ -88,9 +88,11 @@ class MyLayerRelu(Layer):
         variance = var3+var4-K.square(mean)
         return K.concatenate([mean,variance+K.epsilon()])
 
+
     def get_config(self):
         base_config=super(MyLayerRelu,self).get_config()
         return dict(list(base_config.items()))
+
 
     def compute_output_shape(self, input_shape):
         return input_shape
@@ -122,6 +124,7 @@ class MyLayerDenseRelu(Layer):
         base_config=super(MyLayerDenseRelu,self).get_config()
         return dict(list(base_config.items()))
 
+
     def compute_output_shape(self, input_shape):
         return input_shape
 
@@ -137,11 +140,14 @@ class MyFlatten(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
+
         return K.concatenate([K.batch_flatten(x[:,:,:,0:y]), K.batch_flatten(x[:,:,:,y:2*y]+K.epsilon())])
 
     def get_config(self):
         base_config=super(MyFlatten,self).get_config()
         return dict(list(base_config.items()))
+
+        
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0],input_shape[1]*input_shape[2]*input_shape[3])
