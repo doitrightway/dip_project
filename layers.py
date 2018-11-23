@@ -26,7 +26,7 @@ class MyLayer(Layer):
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
         return K.concatenate([K.conv2d(x[:,:,:,0:y],self.kernel),
-          K.conv2d(x[:,:,:,y:2*y],K.square(self.kernel))])
+          K.conv2d(x[:,:,:,y:2*y],K.square(self.kernel))+K.epsilon()])
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1]-self.filter_shape+1,
@@ -50,7 +50,7 @@ class MyLayerDense(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
-        return K.concatenate([K.dot(x[:,0:y],self.kernel),K.dot(x[:,y:2*y], K.square(self.kernel))])
+        return K.concatenate([K.dot(x[:,0:y],self.kernel),K.dot(x[:,y:2*y], K.square(self.kernel)+K.epsilon())])
 
     def compute_output_shape(self, input_shape):
           return (input_shape[0], 2*self.output_dim)
@@ -76,7 +76,7 @@ class MyLayerRelu(Layer):
         var3 = (K.square(x[:,:,:,0:y])+x[:,:,:,y:2*y])*var1
         var4 = x[:,:,:,0:y]*K.sqrt(x[:,:,:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
-        return K.concatenate([mean,variance])
+        return K.concatenate([mean,variance+K.epsilon()])
 
     def compute_output_shape(self, input_shape):
         return input_shape
@@ -102,7 +102,7 @@ class MyLayerDenseRelu(Layer):
         var3 = (K.square(x[:,0:y])+x[:,y:2*y])*var1 
         var4 = x[:,0:y]*K.sqrt(x[:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
-        return K.concatenate([mean,variance])
+        return K.concatenate([mean,variance+K.epsilon()])
 
     def compute_output_shape(self, input_shape):
         return input_shape
@@ -119,7 +119,7 @@ class MyFlatten(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
-        return K.concatenate([K.batch_flatten(x[:,:,:,0:y]), K.batch_flatten(x[:,:,:,y:2*y])])
+        return K.concatenate([K.batch_flatten(x[:,:,:,0:y]), K.batch_flatten(x[:,:,:,y:2*y])+K.epsilon()])
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0],input_shape[1]*input_shape[2]*input_shape[3])
@@ -129,13 +129,13 @@ class MyFlatten(Layer):
 def dropped_inputs(x, rate, noise_shape, seed):
     y=int(K.int_shape(x)[3]/2)
     return K.concatenate([K.dropout(x[:,:,:,0:y], rate, noise_shape, seed=seed),
-      K.dropout(x[:,:,:,y:K.int_shape(x)[3]],rate, noise_shape, seed = seed)])
+      K.dropout(x[:,:,:,y:K.int_shape(x)[3]],rate, noise_shape, seed = seed)+K.epsilon()])
 
 
 def dropped_dense_inputs(x, rate, noise_shape, seed):
     y=int(K.int_shape(x)[1]/2)
     return K.concatenate([K.dropout(x[:,0:y], rate, noise_shape, seed=seed),
-      K.dropout(x[:,y:K.int_shape(x)[1]],rate, noise_shape, seed = seed)])
+      K.dropout(x[:,y:K.int_shape(x)[1]],rate, noise_shape, seed = seed)+K.epsilon()])
 
 ##############
 
