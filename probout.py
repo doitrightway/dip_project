@@ -24,7 +24,7 @@ def customloss(y_true, y_pred):
 	c2=0.5
 	y=int(K.int_shape(y_pred)[1]/2)
 	var = K.softmax(y_pred[:,0:y])
-	scale = c1 + c2*K.sqrt(K.sum(var*y_pred[:,y:2*y],axis=-1))
+	scale = c1 + c2*K.sqrt(K.sum(var*K.exp(y_pred[:,y:2*y]),axis=-1))
 	scale = K.expand_dims(scale,axis=-1)
 	scale = K.repeat_elements(scale,y,axis=-1)
 	output = var/scale
@@ -107,7 +107,7 @@ model.add(Dropout(0.5))
 model.add(Dense(20))
 
 
-checkpoint = keras.callbacks.ModelCheckpoint('probout_network.{epoch:02d}.hdf5', 
+checkpoint = keras.callbacks.ModelCheckpoint('probout_network_rerun.{epoch:02d}.hdf5', 
 	monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', period=1)
 
 sgd = SGD(lr=0.01, decay=0.003, momentum=0.9, nesterov=True)

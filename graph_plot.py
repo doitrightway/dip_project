@@ -43,22 +43,22 @@ def custom_metric(y_true, y_pred):
 
 keras.losses.customloss = customloss
 keras.metrics.custom_metric = custom_metric
-model = load_model('probout_network.05.hdf5')
+model = load_model('probout_network_rerun.10.hdf5')
 sgd = SGD(lr=0.01, decay=.003, momentum=0.9, nesterov=True)
 
 model_json = model.to_json()
-with open("probout_network.05.json","w") as json_file:
+with open("probout_network_rerun.10.json","w") as json_file:
 	json_file.write(model_json)
 
-model.save_weights("probout_network.05.h5")
+model.save_weights("probout_network_rerun.10.h5")
 print("Saved model to disk")
 
 
-json_file= open("probout_network.05.json",'r')
+json_file= open("probout_network_rerun.10.json",'r')
 loaded_model_json= json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
-loaded_model.load_weights("probout_network.05.h5")
+loaded_model.load_weights("probout_network_rerun.10.h5")
 print("Loaded model from disk")
 
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -73,6 +73,8 @@ y_test = y_test[0:test_size]
 x_train = x_train.reshape((np.shape(x_train)+(1,)))
 x_test = x_test.reshape((np.shape(x_test)+(1,)))
 
+y_test = keras.utils.to_categorical(y_test, 10)
+
 inp = loaded_model.input                                           # input placeholder
 outputs = [layer.output for layer in loaded_model.layers]          # all layer outputs
 functors = [K.function([inp], [out]) for out in outputs]    # evaluation functions
@@ -83,20 +85,44 @@ layer_outs = [func([test]) for func in functors]
 entropy_x = [0 for i in range(test_size)]
 entropy_y = [0 for i in range(test_size)]
 
+mymat = np.zeros((64,128))
+myimg = np.zeros((64,128))
+c1=0.5
+c2=0.5
+
 for i in range(test_size):
 	vec = layer_outs[-1][0][i]
 	mean = vec[0:10]
 	variance = vec[10:20]
-	idx = np.argmax(mean)
-	true_idx = y_test[i]
-	mean = np.exp(mean)/np.sum(np.exp(mean))
-	variance = np.exp(variance)/np.sum(np.exp(variance))
-	entropy_x[i] = -np.sum(mean*np.log(mean))/10
-	entropy_y[i] = -np.log(variance[true_idx])*variance[idx]
+	variance = np.exp(variance)
 
-plt.plot(entropy_x,entropy_y)
+	idx = np.argmax(mean)
+	true_idx = np.argmax(y_test[i,:])
+	tmean= mean/np.sum(mean)
+	tvariance = variance/np.sum(variance)
+	tmean = np.clip(tmean,0.00001,1)
+	tvariance = np.clip(tvariance,0.00001,1)
+	p=i%64
+	q=int(i/64)
+	mymat[p][q] = tvariance[true_idx]
+	myimg[p][q] = 1 if(true_idx==idx) else 0
+
+
+	var = np.exp(tmean)/np.sum(np.exp(tmean))
+	scale = c1 + c2*np.sqrt(np.sum(var*variance,axis=-1))
+	output = var/scale
+
+	output = output/np.sum(output)
+
+	entropy_x[i] = -np.sum(output*np.log(output))
+	entropy_y[i] = -np.sum(y_test[i,:]*np.log(output))
+
+plt.scatter(entropy_x,entropy_y)
 plt.show()
 
+fig,ax = plt.subplots()
+ax.matshow(mymat,cmap=plt.cm.Blues)
+plt.show()
 
 
 

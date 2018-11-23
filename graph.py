@@ -95,6 +95,9 @@ test_shape = np.shape(x_test)
 noise_test = 0.01*np.abs(np.random.randn(test_shape[0],test_shape[1],test_shape[2],test_shape[3]))
 x_test= np.concatenate([x_test,noise_test],axis=-1)
 
+y_test = keras.utils.to_categorical(y_test, 10)
+
+
 # inp = loaded_model.input                                           # input placeholder
 # outputs = [layer.output for layer in loaded_model.layers]          # all layer outputs
 # functors = [K.function([inp], [out]) for out in outputs]    # evaluation functions
@@ -113,13 +116,16 @@ entropy_y = [0 for i in range(test_size)]
 
 mymat = np.zeros((64,128))
 myimg = np.zeros((64,128))
+c1=0.5
+c2=0.5
 
 for i in range(test_size):
 	vec = imd[i]
 	mean = vec[0:10]
 	variance = vec[10:20]
+
 	idx = np.argmax(mean)
-	true_idx = y_test[i]
+	true_idx = np.argmax(y_test[i,:])
 	tmean= mean/np.sum(mean)
 	tvariance = variance/np.sum(variance)
 	tmean = np.clip(tmean,0.00001,1)
@@ -128,12 +134,18 @@ for i in range(test_size):
 	q=int(i/64)
 	mymat[p][q] = tvariance[true_idx]
 	myimg[p][q] = 1 if(true_idx==idx) else 0
-	# tmean = np.exp(mean)/np.sum(np.exp(mean))
-	# tvariance = np.exp(variance)/np.sum(np.exp(variance))
-	entropy_x[i] = -np.sum(tmean*np.log(tmean))/10
-	entropy_y[i] = -np.log(tvariance[true_idx])*tvariance[idx]
 
-plt.plot(entropy_x,entropy_y)
+
+	var = np.exp(tmean)/np.sum(np.exp(tmean))
+	scale = c1 + c2*np.sqrt(np.sum(var*variance,axis=-1))
+	output = var/scale
+
+	output = output/np.sum(output)
+
+	entropy_x[i] = -np.sum(output*np.log(output))
+	entropy_y[i] = -np.sum(y_test[i,:]*np.log(output))
+
+plt.scatter(entropy_x,entropy_y)
 plt.show()
 
 fig,ax = plt.subplots()
