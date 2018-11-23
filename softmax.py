@@ -34,6 +34,12 @@ epochs=10
 #   plt.yticks([])
 # plt.show()
 
+size=128*64*4
+x_train = x_train[0:size,:,:]
+y_train = y_train[0:size]
+x_test = x_test[0:8192:,:]
+y_test = y_test[0:8192]
+
 x_train=x_train/255;
 x_test=x_test/255;
 
@@ -74,11 +80,14 @@ model.add(Dropout(0.5))
 #output a softmax to squash the matrix into output probabilities
 model.add(Dense(10, activation='softmax'))
 
+checkpoint = keras.callbacks.ModelCheckpoint('softmax_network.{epoch:02d}.hdf5',
+ monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+
 sgd = SGD(lr=0.01, decay=0.003, momentum=0.9, nesterov=True)
 model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
-          verbose=1,
+          verbose=1,callbacks=[checkpoint],
           validation_data=(x_test, y_test))
 

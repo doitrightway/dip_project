@@ -10,6 +10,7 @@ from layers import MyFlatten
 from layers import MyLayerMaxPool
 from layers import DirichletLayer
 from keras.datasets import mnist
+from keras.datasets import cifar10
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.optimizers import SGD
@@ -57,17 +58,21 @@ def custom_metric(y_true, y_pred):
 
 num_classes=10
 batch_size = 128
-epochs=1
+epochs=10
 # (x_train, y_train), (x_test, y_test) = mnist.load_data()
+
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
+# (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
 
-train_size=128*64*4
-test_size = 128*64
-x_train = x_train[0:train_size,:,:]
-y_train = y_train[0:train_size]
-x_test = x_test[0:test_size,:,:]
-y_test = y_test[0:test_size]
+size1=128*64*4
+size2=128*64
+x_train = x_train[0:size1,:,:]
+y_train = y_train[0:size1]
+x_test = x_test[0:size2,:,:]
+y_test = y_test[0:size2]
+
+
 
 # for i in range(9):
 #   plt.subplot(3,3,i+1)
@@ -121,14 +126,26 @@ model.add(MyLayerDense(10))
 checkpoint = keras.callbacks.ModelCheckpoint('adfnetwork.{epoch:02d}.hdf5', 
 	monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', period=1)
 
+checkpoint = keras.callbacks.ModelCheckpoint('adf.{epoch:02d}.hdf5', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+
 sgd = SGD(lr=0.01, decay=0.003, momentum=0.9, nesterov=True)
 model.compile(loss=customloss, optimizer=sgd, metrics=[custom_metric])
+
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
           verbose=1,
-          callbacks=[checkpoint]
-          validation_data=(x_test, y_test))
+          callbacks=[checkpoint],
+          validation_data=(x_test, y_test),
+          callbacks=[checkpoint])
+
+
+# model.fit(x_train, y_train,
+#           batch_size=batch_size,
+#           epochs=epochs,
+#           verbose=1,
+#           validation_data=(x_test, y_test))
+
 
 # im= keras.models.Model(inputs = model.input, outputs=model.layers[0].output)
 # imd= im.predict(x_train)
