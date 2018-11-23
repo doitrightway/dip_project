@@ -57,6 +57,13 @@ epochs=10
 #   plt.yticks([])
 # plt.show()
 
+train_size=128*64*4
+test_size = 128*64
+x_train = x_train[0:train_size,:,:]
+y_train = y_train[0:train_size]
+x_test = x_test[0:test_size,:,:]
+y_test = y_test[0:test_size]
+
 x_train=x_train/255;
 x_test= x_test/255;
 
@@ -100,11 +107,14 @@ model.add(Dropout(0.5))
 model.add(Dense(20))
 
 
+checkpoint = keras.callbacks.ModelCheckpoint('probout_network.{epoch:02d}.hdf5', 
+	monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+
 sgd = SGD(lr=0.01, decay=0.003, momentum=0.9, nesterov=True)
 model.compile(loss=customloss, optimizer=sgd, metrics=[custom_metric])
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
-          verbose=1,
+          verbose=1,callbacks=[checkpoint],
           validation_data=(x_test, y_test))
 
