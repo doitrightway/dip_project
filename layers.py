@@ -28,6 +28,12 @@ class MyLayer(Layer):
         return K.concatenate([K.conv2d(x[:,:,:,0:y],self.kernel),
           K.conv2d(x[:,:,:,y:2*y],K.square(self.kernel))])
 
+    def get_config(self):
+        config={'num_layers':self.num_layers,
+                'filter_shape':self.filter_shape}
+        base_config=super(MyLayer,self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
     def compute_output_shape(self, input_shape):
         return (input_shape[0], input_shape[1]-self.filter_shape+1,
           input_shape[1]-self.filter_shape+1,2*self.num_layers)
@@ -47,6 +53,10 @@ class MyLayerDense(Layer):
                                         initializer=keras.initializers.RandomNormal(mean=0.0, stddev=0.05, seed=None),
                                         trainable=True)
           super(MyLayerDense, self).build(input_shape)  # Be sure to call this at the end
+    def get_config(self):
+        config={'output_dim':self.output_dim}
+        base_config=super(MyLayerDense,self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
     def call(self, x):
         y=int(K.int_shape(x)[1]/2)
@@ -76,7 +86,11 @@ class MyLayerRelu(Layer):
         var3 = (K.square(x[:,:,:,0:y])+x[:,:,:,y:2*y])*var1
         var4 = x[:,:,:,0:y]*K.sqrt(x[:,:,:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
-        return K.concatenate([mean,variance])
+        return K.concatenate([mean,variance+K.epsilon()])
+
+    def get_config(self):
+        base_config=super(MyLayerRelu,self).get_config()
+        return dict(list(base_config.items()))
 
     def compute_output_shape(self, input_shape):
         return input_shape
@@ -102,7 +116,11 @@ class MyLayerDenseRelu(Layer):
         var3 = (K.square(x[:,0:y])+x[:,y:2*y])*var1 
         var4 = x[:,0:y]*K.sqrt(x[:,y:2*y])*var2
         variance = var3+var4-K.square(mean)
-        return K.concatenate([mean,variance])
+        return K.concatenate([mean,variance+K.epsilon()])
+
+    def get_config(self):
+        base_config=super(MyLayerDenseRelu,self).get_config()
+        return dict(list(base_config.items()))
 
     def compute_output_shape(self, input_shape):
         return input_shape
@@ -119,7 +137,11 @@ class MyFlatten(Layer):
 
     def call(self, x):
         y=int(K.int_shape(x)[3]/2)
-        return K.concatenate([K.batch_flatten(x[:,:,:,0:y]), K.batch_flatten(x[:,:,:,y:2*y])])
+        return K.concatenate([K.batch_flatten(x[:,:,:,0:y]), K.batch_flatten(x[:,:,:,y:2*y]+K.epsilon())])
+
+    def get_config(self):
+        base_config=super(MyFlatten,self).get_config()
+        return dict(list(base_config.items()))
 
     def compute_output_shape(self, input_shape):
         return (input_shape[0],input_shape[1]*input_shape[2]*input_shape[3])
@@ -129,13 +151,13 @@ class MyFlatten(Layer):
 def dropped_inputs(x, rate, noise_shape, seed):
     y=int(K.int_shape(x)[3]/2)
     return K.concatenate([K.dropout(x[:,:,:,0:y], rate, noise_shape, seed=seed),
-      K.dropout(x[:,:,:,y:K.int_shape(x)[3]],rate, noise_shape, seed = seed)])
+      K.dropout(x[:,:,:,y:K.int_shape(x)[3]],rate, noise_shape, seed = seed)+K.epsilon()])
 
 
 def dropped_dense_inputs(x, rate, noise_shape, seed):
     y=int(K.int_shape(x)[1]/2)
     return K.concatenate([K.dropout(x[:,0:y], rate, noise_shape, seed=seed),
-      K.dropout(x[:,y:K.int_shape(x)[1]],rate, noise_shape, seed = seed)])
+      K.dropout(x[:,y:K.int_shape(x)[1]],rate, noise_shape, seed = seed)+K.epsilon()])
 
 ##############
 
@@ -152,6 +174,13 @@ class MyLayerDropout(Layer):
             return K.in_train_phase((lambda : dropped_inputs(x, self.rate, self.noise_shape, self.seed)), x,
                                     training=training)
         return x
+
+    def get_config(self):
+        config={'rate':self.rate,
+                'noise_shape':self.noise_shape,
+                'seed':self.seed}
+        base_config=super(MyLayerDropout,self).get_config()
+        return dict(list(base_config.items())+list(config.items()))
 
     def compute_output_shape(self, input_shape):
         return input_shape
@@ -174,6 +203,13 @@ class MyLayerDenseDropout(Layer):
                                     training=training)
         return x
 
+    def get_config(self):
+        config={'rate':self.rate,
+                'noise_shape':self.noise_shape,
+                'seed':self.seed}
+        base_config=super(MyLayerDenseDropout,self).get_config()
+        return dict(list(base_config.items())+list(config.items()))
+
     def compute_output_shape(self, input_shape):
         return input_shape
 
@@ -193,6 +229,12 @@ class DirichletLayer(Layer):
         scale = K.repeat_elements(scale,y,axis=-1)
         return var/scale
 
+    def get_config(self):
+        config={'c1':self.c1,
+                'c2':self.c2}
+        base_config=super(DirichletLayer,self).get_config()
+        return dict(list(base_config.items())+list(config.items()))
+
     def compute_output_shape(self, input_shape):
         y=int(input_shape[1]/2)
         return (input_shape[0],y)
@@ -203,6 +245,9 @@ class MyLayerMaxPool(_Pooling2D):
                  data_format=None, **kwargs):
         super(MyLayerMaxPool, self).__init__(pool_size, strides, padding,data_format, **kwargs)
 
+    def get_config(self):
+        base_config=super(MyLayerMaxPool,self).get_config()
+        return dict(list(base_config.items()))
 
     def _pooling_function(self, inputs, pool_size, strides,
                           padding, data_format):
